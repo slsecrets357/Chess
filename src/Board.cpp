@@ -58,7 +58,9 @@ void Board::initialize() {
 
 // Print the board (for debugging purposes)
 void Board::printBoard() const {
+    std::cout << "  A B C D E F G H" << std::endl;
     for (int row = 7; row >= 0; --row) {
+        std::cout << row + 1 << " ";
         for (int col = 0; col < 8; ++col) {
             if (board[row][col] != nullptr) {
                 std::cout << board[row][col]->getSymbol() << " ";
@@ -73,6 +75,14 @@ void Board::printBoard() const {
 // Move a piece from one position to another
 bool Board::movePiece(Position from, Position to) {
     Piece* piece = getPiece(from);
+    if (!piece) {
+        std::cout << "you attempted to move a non-existent piece... don't do that again." << std::endl;
+        return false;
+    }
+    if (piece->getColor() != sideToMove) {
+        std::cout << "you can't move your opponent's piece... srsly?" << std::endl;
+        return false;
+    }
     if (piece && piece->isValidMove(*this, from, to)) {
         Piece* targetPiece = getPiece(to);
         if (targetPiece) {

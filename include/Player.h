@@ -20,12 +20,20 @@ public:
     ~Player();
 
     // Getters
-    Color getColor() const;
-    bool isInCheck() const;
-    const std::vector<Piece*>& getPieces() const;
+    Color getColor() const {
+        return color;
+    }
+    bool isInCheck() const {
+        return inCheck;
+    }
+    const std::vector<Piece*>& getPieces() const {
+        return pieces;
+    }
 
     // Setters
-    void setInCheck(bool inCheck);
+    void setInCheck(bool inCheck) {
+        this->inCheck = inCheck;
+    }
 
     // Add a piece to the player's collection
     void addPiece(Piece* piece);

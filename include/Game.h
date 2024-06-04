@@ -4,6 +4,7 @@
 
 #include "Board.h"
 #include "Player.h"
+#include <string.h>
 
 class Game {
 private:
@@ -14,10 +15,12 @@ private:
 
 public:
     Game(Player* white, Player* black);
+    ~Game();
     void startGame();
     void switchPlayer();
     bool isGameOver();
     void processMove(Move move);
+    void printBoard();
 };
 
 #endif // GAME_H

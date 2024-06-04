@@ -54,6 +54,14 @@ public:
     // Get the current side to move
     Color getSideToMove() const;
 
+    std::string printSideToMove() const {
+        if (sideToMove == Color::WHITE) {
+            std::cout << "white player's turn now." << std::endl;
+        } else {
+            std::cout << "dark player's turn now." << std::endl;
+        }
+    }
+
     // Switch the side to move
     void switchSideToMove();
 
