@@ -9,12 +9,11 @@
 class Game {
 private:
     Board board;
-    Player* whitePlayer;
-    Player* blackPlayer;
-    Player* currentPlayer;
+    int startGrid = -1;
+    int destGrid = -1;
 
 public:
-    Game(Player* white, Player* black);
+    Game();
     ~Game();
     void startGame();
     void switchPlayer();

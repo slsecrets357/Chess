@@ -2,6 +2,7 @@
 #define MOVE_H
 
 #include "Piece.h"
+#include <memory>
 
 // Forward declaration of Board to avoid circular dependency
 class Board;

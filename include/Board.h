@@ -9,6 +9,37 @@
 class Board {
 private:
     std::vector<std::vector<std::shared_ptr<Piece>>> board;
+    std::vector<std::string> stringBoard = {
+        "br", "bn", "bb", "bq", "bk", "bb", "bn", "br",
+        "bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp",
+        "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ",
+        "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ",
+        "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ",
+        "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ",
+        "wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp",
+        "wr", "wn", "wb", "wq", "wk", "wb", "wn", "wr"
+    };
+    std::string piece2string(std::shared_ptr<Piece> piece) const {
+        if (piece == nullptr) {
+            return "  ";
+        }
+        std::string color = piece->getColor() == Color::WHITE ? "w" : "b";
+        std::string type = "";
+        if (piece->getType() == PieceType::PAWN) {
+            type = "p";
+        } else if (piece->getType() == PieceType::ROOK) {
+            type = "r";
+        } else if (piece->getType() == PieceType::KNIGHT) {
+            type = "n";
+        } else if (piece->getType() == PieceType::BISHOP) {
+            type = "b";
+        } else if (piece->getType() == PieceType::QUEEN) {
+            type = "q";
+        } else if (piece->getType() == PieceType::KING) {
+            type = "k";
+        }
+        return color + type;
+    }
     std::vector<std::shared_ptr<Piece>> whitePieces;
     std::vector<std::shared_ptr<Piece>> blackPieces;
     Color sideToMove;
@@ -69,6 +100,9 @@ public:
     void switchSideToMove();
 
     bool isValidPosition(Position pos) const;
+
+    // Generate all possible moves for the current player
+    std::vector<Move> generateAllPossibleMoves(Color color) const;
 };
 
 #endif // BOARD_H

@@ -2,27 +2,13 @@
 #include <stdio.h>
 #include "Utility.h"
 
-Game::Game(Player* white, Player* black) : whitePlayer(white), blackPlayer(black)
+Game::Game()
 {
     board.initialize();
-    currentPlayer = whitePlayer;
-    for (int i = 0; i < 8; ++i) {
-        for (int j = 0; j < 8; ++j) {
-            std::shared_ptr<Piece> piece = board.getPiece(Position(i, j));
-            if (piece != nullptr) {
-                if (piece->getColor() == Color::WHITE) {
-                    whitePlayer->addPiece(piece);
-                } else {
-                    blackPlayer->addPiece(piece);
-                }
-            }
-        }
-    }
 }
 
 Game::~Game() {
-    delete whitePlayer;
-    delete blackPlayer;
+
 }
 
 void Game::startGame() {
@@ -36,16 +22,49 @@ void Game::startGame() {
         std::string dest;
         Position from;
         Position to;
+        std::shared_ptr<Piece> piece;
         while (!successfulMove) {
-            start = getUserInput();
-            parseStringInput(start, from);
+            while (startGrid == -1) {
+                std::cout << "Please tell me the position of the piece you would like to move ;)";
+                start = getUserInput();
+                startGrid = parseStringInput(start, from);
+                piece = board.getPiece(from);
+                if (!piece || piece->getColor() != board.getSideToMove()) {
+                    std::cout << "invalid piece at " << from << ". please try again." << std::endl;
+                    startGrid = -1;
+                }
+            }
             std::cout << "starting position is " << from << std::endl;
-            dest = getUserInput();
-            parseStringInput(dest, to);
+            std::cout << "Ok, that's a valid piece. Now tell me where. ";
+            auto legalMoves = piece->generatePossibleMoves(board);
+            std::cout << "here are all the possible moves you could make: \n" << std::endl;
+            for (auto pos : legalMoves) {
+                std::cout << pos << ", ";
+            }
+            std::cout << std::endl;
+            while (destGrid == -1) {
+                dest = getUserInput();
+                destGrid = parseStringInput(dest, to);
+                if (destGrid < 0) {
+                    continue;
+                }
+                auto destPiece = board.getPiece(to);
+                if (destPiece && destPiece->getColor() == board.getSideToMove()) {
+                    std::cout << "changing starting position to " << to << ". rechoose where you wanna move it to." << std::endl;
+                    startGrid = destGrid; // since user selected a piece of the same color, assume it's the starting position
+                    destGrid = -1;
+                    break;
+                }
+            }
+            if (startGrid < 0 || destGrid < 0) {
+                continue;
+            }
             std::cout << "destination position is " << to << std::endl;
-            std::shared_ptr<Piece> piece = board.getPiece(from);
+            startGrid = -1;
+            destGrid = -1;
             if (piece && piece->getColor() == board.getSideToMove() && piece->isValidMove(board, from, to)) {
                 board.movePiece(from, to);
+                successfulMove = true;
                 // Additional logic like checking for check or checkmate can be added here
                 break;
             } else {
@@ -73,9 +92,7 @@ void Game::printBoard() {
 
 int main(int argc, char *argv[])
 {
-    Player* white = new Player(Color::WHITE);
-    Player* black = new Player(Color::BLACK);
-    Game game(white, black);
+    Game game;
     std::cout << "Hello, World!" << std::endl;
     game.startGame();
     game.printBoard();

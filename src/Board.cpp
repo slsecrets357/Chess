@@ -126,7 +126,9 @@ bool Board::movePiece(Position from, Position to) {
             removePiece(targetPiece);
         }
         board[to.row][to.col] = piece;
+        stringBoard[to.row * 8 + to.col] = piece2string(piece);
         board[from.row][from.col] = nullptr;
+        stringBoard[from.row * 8 + from.col] = " ";
         piece->setPosition(to);
         switchSideToMove();
         return true;
@@ -146,6 +148,7 @@ std::shared_ptr<Piece> Board::getPiece(Position pos) const {
 void Board::addPiece(std::shared_ptr<Piece> piece, Position pos) {
     if (isValidPosition(pos)) {
         board[pos.row][pos.col] = piece;
+        stringBoard[pos.row * 8 + pos.col] = piece2string(piece);
         piece->setPosition(pos);
     }
 }
@@ -155,6 +158,7 @@ void Board::removePiece(std::shared_ptr<Piece> piece) {
     Position pos = piece->getPosition();
     if (isValidPosition(pos) && board[pos.row][pos.col] == piece) {
         board[pos.row][pos.col] = nullptr;
+        stringBoard[pos.row * 8 + pos.col] = " ";
     }
     if (piece->getColor() == Color::WHITE) {
         whitePieces.erase(std::remove(whitePieces.begin(), whitePieces.end(), piece), whitePieces.end());
@@ -216,6 +220,8 @@ bool Board::movePieceConst(Position from, Position to) const {
         }
         const_cast<Board*>(this)->board[to.row][to.col] = piece;
         const_cast<Board*>(this)->board[from.row][from.col] = nullptr;
+        const_cast<Board*>(this)->stringBoard[to.row * 8 + to.col] = piece2string(piece);
+        const_cast<Board*>(this)->stringBoard[from.row * 8 + from.col] = " ";
         piece->setPosition(to);
         const_cast<Board*>(this)->switchSideToMove();
         return true;
@@ -226,6 +232,7 @@ bool Board::movePieceConst(Position from, Position to) const {
 void Board::addPieceConst(std::shared_ptr<Piece> piece, Position pos) const {
     if (isValidPosition(pos)) {
         const_cast<Board*>(this)->board[pos.row][pos.col] = piece;
+        const_cast<Board*>(this)->stringBoard[pos.row * 8 + pos.col] = piece2string(piece);
         piece->setPosition(pos);
     }
 }
@@ -272,4 +279,16 @@ void Board::switchSideToMove() {
 
 bool Board::isValidPosition(Position pos) const {
     return pos.row >= 0 && pos.row < 8 && pos.col >= 0 && pos.col < 8;
+}
+
+std::vector<Move> Board::generateAllPossibleMoves(Color color) const {
+    auto pieces = color == Color::WHITE ? whitePieces : blackPieces;
+    std::vector<Move> allMoves;
+    for (std::shared_ptr<Piece> piece : pieces) {
+        std::vector<Position> possibleMoves = piece->generatePossibleMoves(*this);
+        for (const Position& pos : possibleMoves) {
+            allMoves.emplace_back(piece->getPosition(), pos, piece, getPiece(pos));
+        }
+    }
+    return allMoves;
 }

@@ -29,7 +29,8 @@ public:
 
     // Stream insertion operator
     friend std::ostream& operator<<(std::ostream& os, const Position& pos) {
-        os << "(" << pos.row << ", " << pos.col << ")";
+        char colChar = 'A' + pos.col;
+        os << pos.row + 1 << colChar;
         return os;
     }
 };
