@@ -8,7 +8,7 @@ Game::Game(Player* white, Player* black) : whitePlayer(white), blackPlayer(black
     currentPlayer = whitePlayer;
     for (int i = 0; i < 8; ++i) {
         for (int j = 0; j < 8; ++j) {
-            Piece* piece = board.getPiece(Position(i, j));
+            std::shared_ptr<Piece> piece = board.getPiece(Position(i, j));
             if (piece != nullptr) {
                 if (piece->getColor() == Color::WHITE) {
                     whitePlayer->addPiece(piece);
@@ -39,9 +39,13 @@ void Game::startGame() {
         while (!successfulMove) {
             start = getUserInput();
             parseStringInput(start, from);
+            std::cout << "starting position is " << from << std::endl;
             dest = getUserInput();
             parseStringInput(dest, to);
-            if(currentPlayer->makeMove(board, from, to)) {
+            std::cout << "destination position is " << to << std::endl;
+            std::shared_ptr<Piece> piece = board.getPiece(from);
+            if (piece && piece->getColor() == board.getSideToMove() && piece->isValidMove(board, from, to)) {
+                board.movePiece(from, to);
                 // Additional logic like checking for check or checkmate can be added here
                 break;
             } else {
@@ -50,14 +54,14 @@ void Game::startGame() {
         }
         std::cout << "moving from " << from << " to " << to << std::endl;
         board.printSideToMove();
-        switchPlayer();
+        // switchPlayer();
     }
 }
 void Game::switchPlayer() {
 
 }
 bool Game::isGameOver() {
-
+  return false;
 }
 void Game::processMove(Move move) {
     

@@ -12,7 +12,7 @@ bool King::isValidMove(const Board& board, Position from, Position to) const {
         return false;
     }
     // Ensure destination is either empty or contains an opponent's piece
-    Piece* destinationPiece = board.getPiece(to);
+    std::shared_ptr<Piece> destinationPiece = board.getPiece(to);
     if (destinationPiece == nullptr || destinationPiece->getColor() != color) {
         return true;
     }
@@ -30,7 +30,7 @@ std::vector<Position> King::generatePossibleMoves(const Board& board) const {
             if (rowDiff != 0 || colDiff != 0) {
                 Position newPos(position.row + rowDiff, position.col + colDiff);
                 if (board.isValidPosition(newPos)) {
-                    Piece* pieceAtNewPos = board.getPiece(newPos);
+                    std::shared_ptr<Piece> pieceAtNewPos = board.getPiece(newPos);
                     if (pieceAtNewPos == nullptr || pieceAtNewPos->getColor() != color) {
                         moves.push_back(newPos);
                     }
@@ -62,7 +62,7 @@ bool Queen::isValidMove(const Board& board, Position from, Position to) const {
         }
     }
     // Ensure destination is either empty or contains an opponent's piece
-    Piece* destinationPiece = board.getPiece(to);
+    std::shared_ptr<Piece> destinationPiece = board.getPiece(to);
     if (destinationPiece == nullptr || destinationPiece->getColor() != color) {
         return true;
     }
@@ -85,7 +85,7 @@ std::vector<Position> Queen::generatePossibleMoves(const Board& board) const {
             if (!board.isValidPosition(newPos)) {
                 break;
             }
-            Piece* pieceAtNewPos = board.getPiece(newPos);
+            std::shared_ptr<Piece> pieceAtNewPos = board.getPiece(newPos);
             if (pieceAtNewPos == nullptr) {
                 moves.push_back(newPos);
             } else {
@@ -124,7 +124,7 @@ bool Bishop::isValidMove(const Board& board, Position from, Position to) const {
     }
 
     // Ensure destination is either empty or contains an opponent's piece
-    Piece* destinationPiece = board.getPiece(to);
+    std::shared_ptr<Piece> destinationPiece = board.getPiece(to);
     if (destinationPiece == nullptr || destinationPiece->getColor() != color) {
         return true;
     }
@@ -150,7 +150,7 @@ std::vector<Position> Bishop::generatePossibleMoves(const Board& board) const {
             if (!board.isValidPosition(newPos)) {
                 break;
             }
-            Piece* pieceAtNewPos = board.getPiece(newPos);
+            std::shared_ptr<Piece> pieceAtNewPos = board.getPiece(newPos);
             if (pieceAtNewPos == nullptr) {
                 moves.push_back(newPos);
             } else {
@@ -172,7 +172,7 @@ bool Knight::isValidMove(const Board& board, Position from, Position to) const {
     
     // Knight moves in an L-shape: two squares in one direction and one square perpendicular
     if ((rowDiff == 2 && colDiff == 1) || (rowDiff == 1 && colDiff == 2)) {
-        Piece* destinationPiece = board.getPiece(to);
+        std::shared_ptr<Piece> destinationPiece = board.getPiece(to);
         // Ensure the destination is either empty or contains an opponent's piece
         if (destinationPiece == nullptr || destinationPiece->getColor() != color) {
             return true;
@@ -195,7 +195,7 @@ std::vector<Position> Knight::generatePossibleMoves(const Board& board) const {
     for (const auto& offset : moveOffsets) {
         Position newPos = { position.row + offset.first, position.col + offset.second };
         if (board.isValidPosition(newPos)) {
-            Piece* pieceAtNewPos = board.getPiece(newPos);
+            std::shared_ptr<Piece> pieceAtNewPos = board.getPiece(newPos);
             if (pieceAtNewPos == nullptr || pieceAtNewPos->getColor() != color) {
                 moves.push_back(newPos);
             }
@@ -228,7 +228,7 @@ bool Rook::isValidMove(const Board& board, Position from, Position to) const {
     }
 
     // Ensure destination is either empty or contains an opponent's piece
-    Piece* destinationPiece = board.getPiece(to);
+    std::shared_ptr<Piece> destinationPiece = board.getPiece(to);
     if (destinationPiece == nullptr || destinationPiece->getColor() != color) {
         return true;
     }
@@ -254,7 +254,7 @@ std::vector<Position> Rook::generatePossibleMoves(const Board& board) const {
             if (!board.isValidPosition(newPos)) {
                 break;
             }
-            Piece* pieceAtNewPos = board.getPiece(newPos);
+            std::shared_ptr<Piece> pieceAtNewPos = board.getPiece(newPos);
             if (pieceAtNewPos == nullptr) {
                 moves.push_back(newPos);
             } else {

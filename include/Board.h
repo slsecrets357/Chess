@@ -4,10 +4,13 @@
 #include <vector>
 #include "Piece.h"
 #include "Move.h"
+#include <memory>
 
 class Board {
 private:
-    std::vector<std::vector<Piece*>> board;
+    std::vector<std::vector<std::shared_ptr<Piece>>> board;
+    std::vector<std::shared_ptr<Piece>> whitePieces;
+    std::vector<std::shared_ptr<Piece>> blackPieces;
     Color sideToMove;
 
 public:
@@ -27,26 +30,26 @@ public:
     bool movePiece(Position from, Position to);
 
     // Get the piece at a specific position
-    Piece* getPiece(Position pos) const;
+    std::shared_ptr<Piece> getPiece(Position pos) const;
 
     // Add a piece to a specific position
-    void addPiece(Piece* piece, Position pos);
+    void addPiece(std::shared_ptr<Piece> piece, Position pos);
 
     // Remove a piece from a specific position
-    void removePiece(Piece* piece);
+    void removePiece(std::shared_ptr<Piece> piece);
 
     // Promote a pawn to another piece
-    void promotePiece(Position pos, Piece* newPiece);
+    void promotePiece(Position pos, std::shared_ptr<Piece> newPiece);
 
     // Demote a piece back to a pawn (for undoing promotions)
-    void demotePiece(Position pos, Piece* pawnPiece);
+    void demotePiece(Position pos, std::shared_ptr<Piece> pawnPiece);
 
     // Check if a move puts the player in check
     bool isCheck(Color color) const;
 
     bool movePieceConst(Position from, Position to) const;
 
-    void addPieceConst(Piece* piece, Position pos) const;
+    void addPieceConst(std::shared_ptr<Piece> piece, Position pos) const;
 
     // Check if the current player is in checkmate
     bool isCheckmate(Color color) const;
@@ -54,7 +57,7 @@ public:
     // Get the current side to move
     Color getSideToMove() const;
 
-    std::string printSideToMove() const {
+    void printSideToMove() const {
         if (sideToMove == Color::WHITE) {
             std::cout << "white player's turn now." << std::endl;
         } else {

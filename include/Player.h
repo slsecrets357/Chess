@@ -9,7 +9,7 @@
 class Player {
 private:
     Color color;
-    std::vector<Piece*> pieces;
+    std::vector<std::shared_ptr<Piece>> pieces;
     bool inCheck;
 
 public:
@@ -26,7 +26,7 @@ public:
     bool isInCheck() const {
         return inCheck;
     }
-    const std::vector<Piece*>& getPieces() const {
+    const std::vector<std::shared_ptr<Piece>>& getPieces() const {
         return pieces;
     }
 
@@ -36,10 +36,10 @@ public:
     }
 
     // Add a piece to the player's collection
-    void addPiece(Piece* piece);
+    void addPiece(std::shared_ptr<Piece> piece);
 
     // Remove a piece from the player's collection
-    void removePiece(Piece* piece);
+    void removePiece(std::shared_ptr<Piece> piece);
 
     // Make a move on the board
     bool makeMove(Board& board, Position from, Position to);

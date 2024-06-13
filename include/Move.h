@@ -10,27 +10,27 @@ class Move {
 private:
     Position from;
     Position to;
-    Piece* movedPiece;
-    Piece* capturedPiece;
+    std::shared_ptr<Piece> movedPiece;
+    std::shared_ptr<Piece> capturedPiece;
     bool isCastling;
     bool isPromotion;
-    Piece* promotionPiece;
+    std::shared_ptr<Piece> promotionPiece;
 
 public:
     // Constructors
-    Move(Position from, Position to, Piece* movedPiece, Piece* capturedPiece = nullptr, 
-         bool isCastling = false, bool isPromotion = false, Piece* promotionPiece = nullptr)
+    Move(Position from, Position to, std::shared_ptr<Piece> movedPiece, std::shared_ptr<Piece> capturedPiece = nullptr, 
+         bool isCastling = false, bool isPromotion = false, std::shared_ptr<Piece> promotionPiece = nullptr)
         : from(from), to(to), movedPiece(movedPiece), capturedPiece(capturedPiece),
           isCastling(isCastling), isPromotion(isPromotion), promotionPiece(promotionPiece) {}
 
     // Accessors
     Position getFrom() const { return from; }
     Position getTo() const { return to; }
-    Piece* getMovedPiece() const { return movedPiece; }
-    Piece* getCapturedPiece() const { return capturedPiece; }
+    std::shared_ptr<Piece> getMovedPiece() const { return movedPiece; }
+    std::shared_ptr<Piece> getCapturedPiece() const { return capturedPiece; }
     bool getIsCastling() const { return isCastling; }
     bool getIsPromotion() const { return isPromotion; }
-    Piece* getPromotionPiece() const { return promotionPiece; }
+    std::shared_ptr<Piece> getPromotionPiece() const { return promotionPiece; }
 
     // Execute the move on the board
     void execute(Board& board);

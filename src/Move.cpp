@@ -17,7 +17,7 @@ void Move::execute(Board& board) {
 
     // Handle castling
     if (isCastling) {
-        // Specific castling logic
+        // @todo: Specific castling logic
     }
 }
 
@@ -37,6 +37,6 @@ void Move::undo(Board& board) {
 
     // Handle castling undo
     if (isCastling) {
-        // Specific castling undo logic
+        // @todo: Specific castling undo logic
     }
 }

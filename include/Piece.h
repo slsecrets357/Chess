@@ -16,6 +16,7 @@ public:
     // Constructors
     Position(int r, int c) : row(r), col(c) {}
     Position() : row(0), col(0) {}
+    Position(int n) : row(n / 8), col(n % 8) {}
 
     // Comparison operators
     bool operator==(const Position& other) const {
