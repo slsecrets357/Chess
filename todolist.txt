@@ -1,0 +1,5 @@
+- pawn capture
+- castle
+- check & checkmate
+- undo/redo
+- repetition draw
