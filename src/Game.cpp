@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "Utility.h"
 
-Game::Game()
+Game::Game(): selectedPiece(nullptr)
 {
     board.initialize();
 }
@@ -11,6 +11,28 @@ Game::~Game() {
 
 }
 
+void Game::processInput(std::string input) {
+    if (startGrid == -1) {
+        startGrid = parseStringInput(input, from);
+        selectedPiece = board.getPiece(from);
+        if (!selectedPiece || selectedPiece->getColor() != board.getSideToMove()) {
+                    std::cout << "invalid piece at " << from << ". please try again." << std::endl;
+                    startGrid = -1;
+                }
+    } else if (destGrid == -1) {
+        destGrid = parseStringInput(input, to);
+        if (destGrid < 0) {
+            return;
+        }
+        auto destPiece = board.getPiece(to);
+        if (destPiece && destPiece->getColor() == board.getSideToMove()) {
+            std::cout << "changing starting position to " << to << ". rechoose where you wanna move it to." << std::endl;
+            startGrid = destGrid; // since user selected a piece of the same color, assume it's the starting position
+            destGrid = -1;
+            return;
+        }
+    }
+}
 void Game::startGame() {
     std::cout << "welcome to Simon's Chess Game" << std::endl;
     while (!isGameOver()) {
@@ -18,25 +40,15 @@ void Game::startGame() {
         std::cout << colorString << "'s turn" << std::endl;
         printBoard();
         bool successfulMove = false;
-        std::string start;
-        std::string dest;
-        Position from;
-        Position to;
-        std::shared_ptr<Piece> piece;
         while (!successfulMove) {
             while (startGrid == -1) {
                 std::cout << "Please tell me the position of the piece you would like to move ;)";
                 start = getUserInput();
-                startGrid = parseStringInput(start, from);
-                piece = board.getPiece(from);
-                if (!piece || piece->getColor() != board.getSideToMove()) {
-                    std::cout << "invalid piece at " << from << ". please try again." << std::endl;
-                    startGrid = -1;
-                }
+                processInput(start);
             }
             std::cout << "starting position is " << from << std::endl;
             std::cout << "Ok, that's a valid piece. Now tell me where. ";
-            auto legalMoves = piece->generatePossibleMoves(board);
+            auto legalMoves = selectedPiece->generatePossibleMoves(board);
             std::cout << "here are all the possible moves you could make: \n" << std::endl;
             for (auto pos : legalMoves) {
                 std::cout << pos << ", ";
@@ -44,25 +56,12 @@ void Game::startGame() {
             std::cout << std::endl;
             while (destGrid == -1) {
                 dest = getUserInput();
-                destGrid = parseStringInput(dest, to);
-                if (destGrid < 0) {
-                    continue;
-                }
-                auto destPiece = board.getPiece(to);
-                if (destPiece && destPiece->getColor() == board.getSideToMove()) {
-                    std::cout << "changing starting position to " << to << ". rechoose where you wanna move it to." << std::endl;
-                    startGrid = destGrid; // since user selected a piece of the same color, assume it's the starting position
-                    destGrid = -1;
-                    break;
-                }
-            }
-            if (startGrid < 0 || destGrid < 0) {
-                continue;
+                processInput(dest);
             }
             std::cout << "destination position is " << to << std::endl;
             startGrid = -1;
             destGrid = -1;
-            if (piece && piece->getColor() == board.getSideToMove() && piece->isValidMove(board, from, to)) {
+            if (selectedPiece && selectedPiece->getColor() == board.getSideToMove() && selectedPiece->isValidMove(board, from, to)) {
                 board.movePiece(from, to);
                 successfulMove = true;
                 // Additional logic like checking for check or checkmate can be added here

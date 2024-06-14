@@ -7,12 +7,17 @@
 #include <string.h>
 
 class Game {
-private:
+public:
     Board board;
     int startGrid = -1;
     int destGrid = -1;
+    std::string start;
+    std::string dest;
+    Position from;
+    Position to;
+    std::shared_ptr<Piece> selectedPiece;
+    bool successfulMove = false;
 
-public:
     Game();
     ~Game();
     void startGame();
@@ -20,6 +25,8 @@ public:
     bool isGameOver();
     void processMove(Move move);
     void printBoard();
+    void processInput(std::string input);
+    void processInput(int input);
 };
 
 #endif // GAME_H
