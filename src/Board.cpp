@@ -2,7 +2,9 @@
 #include "Piece.h"
 #include <iostream>
 
-Board::Board() : board(8, std::vector<std::shared_ptr<Piece>>(8, nullptr)), sideToMove(Color::WHITE) {}
+Board::Board() : board(8, std::vector<std::shared_ptr<Piece>>(8, nullptr)), 
+                sideToMove(Color::WHITE), whiteKing(nullptr), blackKing(nullptr)
+{}
 
 // Destructor
 Board::~Board() {
@@ -82,8 +84,8 @@ void Board::initialize() {
     blackPieces.push_back(blackQueen);
 
     // Add kings
-    auto whiteKing = std::make_shared<King>(Color::WHITE, Position(0, 4));
-    auto blackKing = std::make_shared<King>(Color::BLACK, Position(7, 4));
+    whiteKing = std::make_shared<King>(Color::WHITE, Position(0, 4));
+    blackKing = std::make_shared<King>(Color::BLACK, Position(7, 4));
     board[0][4] = whiteKing;
     board[7][4] = blackKing;
     whitePieces.push_back(whiteKing);
@@ -102,7 +104,7 @@ void Board::printBoard() const {
             if (board[row][col] != nullptr) {
                 std::cout << board[row][col]->getSymbol() << " ";
             } else {
-                std::cout << ". ";
+                std::cout << "- ";
             }
         }
         std::cout << std::endl;
@@ -110,30 +112,140 @@ void Board::printBoard() const {
 }
 
 // Move a piece from one position to another
-bool Board::movePiece(Position from, Position to) {
+bool Board::movePiece(Position from, Position to, bool safetyCheck, bool undo) {
+    // std::cout << "movePiece: from " << from << " to " << to << std::endl;
+    if (safetyCheck && !undo) {
+        changedPositions.clear();
+    }
     std::shared_ptr<Piece> piece = getPiece(from);
-    if (!piece) {
+    if (safetyCheck && !piece) {
         std::cout << "you attempted to move a non-existent piece... don't do that again." << std::endl;
         return false;
     }
-    if (piece->getColor() != sideToMove) {
+    if (safetyCheck && piece->getColor() != sideToMove) {
         std::cout << "you can't move your opponent's piece... srsly?" << std::endl;
         return false;
     }
-    if (piece && piece->isValidMove(*this, from, to)) {
-        std::shared_ptr<Piece> targetPiece = getPiece(to);
-        if (targetPiece) {
-            removePiece(targetPiece);
+
+    // if (!safetyCheck || piece && piece->isValidMove(*this, from, to)) {
+    if (!safetyCheck || piece) {
+        std::vector<Position> possibleMoves = piece->moves;
+        if (safetyCheck && std::find(possibleMoves.begin(), possibleMoves.end(), to) == possibleMoves.end()) {
+            std::cout << "move not found in piece's valid moves: " << from << " to " << to << std::endl;
+            return false;
         }
-        board[to.row][to.col] = piece;
-        stringBoard[to.row * 8 + to.col] = piece2string(piece);
-        board[from.row][from.col] = nullptr;
-        stringBoard[from.row * 8 + from.col] = " ";
-        piece->setPosition(to);
+
+        // handle castling
+        bool castling = false;
+        if (piece->getType() == PieceType::KING && piece->isCastling(to)) {
+            castling = true;
+            std::cout << "castling detected" << std::endl;
+            std::shared_ptr<Piece> rook = nullptr;
+            Position rookInitialPos;
+            Position rookFinalPos;
+            if (sideToMove == Color::WHITE) {
+                if (to.col == 2) {
+                    rookInitialPos = Position(0, 0);
+                    rookFinalPos = Position(0, 3);
+                    rook = getPiece(rookInitialPos);
+                } else if (to.col == 6) {
+                    rookInitialPos = Position(0, 7);
+                    rookFinalPos = Position(0, 5);
+                    rook = getPiece(rookInitialPos);
+                    if(!rook) {
+                        std::cout << "no rook found for castling" << std::endl;
+                        return false;
+                    }
+                }
+            } else {
+                if (to.col == 2) {
+                    rookInitialPos = Position(7, 0);
+                    rookFinalPos = Position(7, 3);
+                    rook = getPiece(rookInitialPos);
+                } else if (to.col == 6) {
+                    rookInitialPos = Position(7, 7);
+                    rookFinalPos = Position(7, 5);
+                    rook = getPiece(rookInitialPos);
+                }
+            }
+            if (!rook) {
+                std::cout << "no rook found for castling" << std::endl;
+                return false;
+            }
+            board[rookFinalPos.row][rookFinalPos.col] = rook;
+            stringBoard[rookFinalPos.row * 8 + rookFinalPos.col] = piece2string(rook);
+            board[rookInitialPos.row][rookInitialPos.col] = nullptr;
+            stringBoard[rookInitialPos.row * 8 + rookInitialPos.col] = " ";
+            rook->setPosition(rookFinalPos);
+            if (safetyCheck && !undo) {
+                changedPositions.emplace_back(std::make_pair(rookInitialPos.row*8 + rookInitialPos.col, static_cast<int>(pieceTypeWithColor::empty)));
+                changedPositions.emplace_back(std::make_pair(rookFinalPos.row*8 + rookFinalPos.col, static_cast<int>(rook->getPieceTypeWithColor())));
+            }
+        }
+
+        bool promotion = false;
+        std::shared_ptr<Piece> promotionPiece = nullptr;
+        if (safetyCheck && piece->getType() == PieceType::PAWN && (to.row == 0 || to.row == 7)) {
+            promotion = true;
+        }
+        if (promotion) {
+            promotionPiece = std::make_shared<Queen>(piece->getColor(), to);
+            if (!undo) {
+                moves.emplace_back(new Move(from, to, piece, nullptr, castling, promotion));
+                if(safetyCheck) piece->hasMoved = true;
+                std::cout << "move history size: " << moves.size() << std::endl;
+            }
+            // remove pawn from board
+            removePiece(piece);
+            // add queen to board
+            if(promotionPiece->getColor() == Color::WHITE) {
+                whitePieces.push_back(promotionPiece);
+            } else {
+                blackPieces.push_back(promotionPiece);
+            }
+            board[to.row][to.col] = promotionPiece;
+            stringBoard[to.row * 8 + to.col] = piece2string(promotionPiece);
+
+            if (safetyCheck && !undo) {
+                changedPositions.emplace_back(std::make_pair(from.row*8 + from.col, static_cast<int>(pieceTypeWithColor::empty)));
+                changedPositions.emplace_back(std::make_pair(to.row*8 + to.col, static_cast<int>(promotionPiece->getPieceTypeWithColor())));
+            }
+        } else {
+            std::shared_ptr<Piece> targetPiece = getPiece(to);
+            if (!undo) {
+                moves.emplace_back(new Move(from, to, piece, targetPiece, castling, promotion));
+                if(safetyCheck) piece->hasMoved = true;
+                std::cout << "move history size: " << moves.size() << std::endl;
+            }
+            if (targetPiece) {
+                removePiece(targetPiece);
+            }
+            board[to.row][to.col] = piece;
+            stringBoard[to.row * 8 + to.col] = piece2string(piece);
+            board[from.row][from.col] = nullptr;
+            stringBoard[from.row * 8 + from.col] = " ";
+            piece->setPosition(to);
+            if (safetyCheck && !undo) {
+                changedPositions.emplace_back(std::make_pair(from.row*8 + from.col, static_cast<int>(pieceTypeWithColor::empty)));
+                changedPositions.emplace_back(std::make_pair(to.row*8 + to.col, static_cast<int>(piece->getPieceTypeWithColor())));
+            }
+        }
         switchSideToMove();
         return true;
     }
     return false;
+}
+bool Board::undoMove() {
+    // std::cout << "undoing move..." << std::endl;
+    if (moves.empty()) {
+        return false;
+    }
+    // std::cout << "undoMove: move history size: " << moves.size() << std::endl;
+    Move* lastMove = moves.back();
+    moves.pop_back();
+    lastMove->undo(*this);
+    delete lastMove;
+    // std::cout << "undoMove: move history size2: " << moves.size() << std::endl;
 }
 
 // Get the piece at a specific position
@@ -150,6 +262,11 @@ void Board::addPiece(std::shared_ptr<Piece> piece, Position pos) {
         board[pos.row][pos.col] = piece;
         stringBoard[pos.row * 8 + pos.col] = piece2string(piece);
         piece->setPosition(pos);
+        if (piece->getColor() == Color::WHITE) {
+            whitePieces.push_back(piece);
+        } else {
+            blackPieces.push_back(piece);
+        }
     }
 }
 
@@ -185,86 +302,23 @@ void Board::demotePiece(Position pos, std::shared_ptr<Piece> pawnPiece) {
 
 // Check if a move puts the player in check
 bool Board::isCheck(Color color) const {
-    Position kingPos;
-    // Find the king's position
-    for (int row = 0; row < 8; ++row) {
-        for (int col = 0; col < 8; ++col) {
-            std::shared_ptr<Piece> piece = board[row][col];
-            if (piece != nullptr && piece->getType() == PieceType::KING) {
-                kingPos = piece->getPosition();
-                break;
-            }
-        }
-    }
+    Position kingPos = (color == Color::WHITE) ? whiteKing->getPosition() : blackKing->getPosition();
 
     // Check if any opponent's piece can move to the king's position
-    for (int row = 0; row < 8; ++row) {
-        for (int col = 0; col < 8; ++col) {
-            std::shared_ptr<Piece> piece = board[row][col];
-            if (piece != nullptr && piece->getColor() != color) {
-                if (piece->isValidMove(*this, {row, col}, kingPos)) {
-                    return true;
-                }
-            }
+    std::vector<std::shared_ptr<Piece>> opponentPieces = (color == Color::WHITE) ? blackPieces : whitePieces;
+    for (std::shared_ptr<Piece> piece : opponentPieces) {
+        // std::cout << "checking piece: " << *piece << std::endl;
+        if (piece->isValidMove(*this, piece->getPosition(), kingPos)) {
+            return true;
         }
     }
     return false;
-}
-
-bool Board::movePieceConst(Position from, Position to) const {
-    std::shared_ptr<Piece> piece = getPiece(from);
-    if (piece && piece->isValidMove(*this, from, to)) {
-        std::shared_ptr<Piece> targetPiece = getPiece(to);
-        if (targetPiece) {
-            const_cast<Board*>(this)->removePiece(targetPiece);
-        }
-        const_cast<Board*>(this)->board[to.row][to.col] = piece;
-        const_cast<Board*>(this)->board[from.row][from.col] = nullptr;
-        const_cast<Board*>(this)->stringBoard[to.row * 8 + to.col] = piece2string(piece);
-        const_cast<Board*>(this)->stringBoard[from.row * 8 + from.col] = " ";
-        piece->setPosition(to);
-        const_cast<Board*>(this)->switchSideToMove();
-        return true;
-    }
-    return false;
-}
-
-void Board::addPieceConst(std::shared_ptr<Piece> piece, Position pos) const {
-    if (isValidPosition(pos)) {
-        const_cast<Board*>(this)->board[pos.row][pos.col] = piece;
-        const_cast<Board*>(this)->stringBoard[pos.row * 8 + pos.col] = piece2string(piece);
-        piece->setPosition(pos);
-    }
 }
 
 // Check if the current player is in checkmate
 bool Board::isCheckmate(Color color) const {
-    if (!isCheck(color)) {
-        return false;
-    }
-    // Check if any move can get the player out of check
-    for (int row = 0; row < 8; ++row) {
-        for (int col = 0; col < 8; ++col) {
-            std::shared_ptr<Piece> piece = board[row][col];
-            if (piece != nullptr && piece->getColor() == color) {
-                std::vector<Position> moves = piece->generatePossibleMoves(*this);
-                for (const auto& move : moves) {
-                    std::shared_ptr<Piece> capturedPiece = getPiece(move);
-                    Position originalPos = piece->getPosition();
-                    movePieceConst(originalPos, move);
-                    bool stillInCheck = isCheck(color);
-                    movePieceConst(move, originalPos); // Undo the move
-                    if (capturedPiece != nullptr) {
-                        addPieceConst(capturedPiece, move); // Restore captured piece
-                    }
-                    if (!stillInCheck) {
-                        return false;
-                    }
-                }
-            }
-        }
-    }
-    return true;
+    // @todo: Implement this function
+    return false;
 }
 
 // Get the current side to move

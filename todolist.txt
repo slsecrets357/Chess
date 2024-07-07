@@ -1,5 +1,13 @@
+- new repo
+
 - pawn capture
 - castle
 - check & checkmate
 - undo/redo
 - repetition draw
+
+- timer
+- user profile
+- output messages
+- random agent
+- qt in vscode

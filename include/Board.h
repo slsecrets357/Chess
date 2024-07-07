@@ -5,20 +5,24 @@
 #include "Piece.h"
 #include "Move.h"
 #include <memory>
+#include <sstream>
 
 class Board {
-private:
+public:
+    std::shared_ptr<Piece> whiteKing;
+    std::shared_ptr<Piece> blackKing;
     std::vector<std::vector<std::shared_ptr<Piece>>> board;
     std::vector<std::string> stringBoard = {
-        "br", "bn", "bb", "bq", "bk", "bb", "bn", "br",
-        "bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp",
-        "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ",
-        "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ",
-        "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ",
-        "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ",
+        "wr", "wn", "wb", "wq", "wk", "wb", "wn", "wr",
         "wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp",
-        "wr", "wn", "wb", "wq", "wk", "wb", "wn", "wr"
+        "", "", "", "", "", "", "", "",
+        "", "", "", "", "", "", "", "",
+        "", "", "", "", "", "", "", "",
+        "", "", "", "", "", "", "", "",
+        "bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp",
+        "br", "bn", "bb", "bq", "bk", "bb", "bn", "br"
     };
+    std::vector<std::pair<int, int>> changedPositions;
     std::string piece2string(std::shared_ptr<Piece> piece) const {
         if (piece == nullptr) {
             return "  ";
@@ -42,9 +46,10 @@ private:
     }
     std::vector<std::shared_ptr<Piece>> whitePieces;
     std::vector<std::shared_ptr<Piece>> blackPieces;
+    std::vector<Move*> moves;
     Color sideToMove;
+    bool isInCheck = false;
 
-public:
     // Constructor
     Board();
 
@@ -58,7 +63,9 @@ public:
     void printBoard() const;
 
     // Move a piece from one position to another
-    bool movePiece(Position from, Position to);
+    enum class MoveType { FAILED, NORMAL, CASTLING, PROMOTION };
+    bool movePiece(Position from, Position to, bool safetyCheck = true, bool undo = false);
+    bool undoMove();
 
     // Get the piece at a specific position
     std::shared_ptr<Piece> getPiece(Position pos) const;
@@ -78,15 +85,14 @@ public:
     // Check if a move puts the player in check
     bool isCheck(Color color) const;
 
-    bool movePieceConst(Position from, Position to) const;
-
-    void addPieceConst(std::shared_ptr<Piece> piece, Position pos) const;
-
     // Check if the current player is in checkmate
     bool isCheckmate(Color color) const;
 
     // Get the current side to move
     Color getSideToMove() const;
+    Color getOppositeColor() const {
+        return sideToMove == Color::WHITE ? Color::BLACK : Color::WHITE;
+    }
 
     void printSideToMove() const {
         if (sideToMove == Color::WHITE) {
@@ -103,6 +109,59 @@ public:
 
     // Generate all possible moves for the current player
     std::vector<Move> generateAllPossibleMoves(Color color) const;
+
+    void updateCheckStatus() {
+        isInCheck = isCheck(sideToMove);
+    }
+
+    bool getIsInCheck() const {
+        return isInCheck;
+    }
+
+    std::string toFEN() const {
+        std::stringstream fen;
+        
+        // Board position
+        for (int row = 7; row >= 0; --row) {
+            int emptyCount = 0;
+            for (int col = 0; col < 8; ++col) {
+                auto piece = getPiece(Position(row, col));
+                if (piece) {
+                    if (emptyCount > 0) {
+                        fen << emptyCount;
+                        emptyCount = 0;
+                    }
+                    fen << piece->getFENChar();
+                } else {
+                    ++emptyCount;
+                }
+            }
+            if (emptyCount > 0) {
+                fen << emptyCount;
+            }
+            if (row > 0) {
+                fen << '/';
+            }
+        }
+
+        // Side to move
+        fen << (sideToMove == Color::WHITE ? " w" : " b");
+
+        // Castling rights (this is a placeholder, you should implement proper castling rights tracking)
+        fen << " KQkq";
+
+        // En passant target square (this is a placeholder, you should implement en passant tracking)
+        fen << " -";
+
+        // Halfmove clock (this is a placeholder, you should implement halfmove clock)
+        fen << " 0";
+
+        // Fullmove number (this is a placeholder, you should implement fullmove number tracking)
+        fen << " 1";
+
+        return fen.str();
+    }
+
 };
 
 #endif // BOARD_H

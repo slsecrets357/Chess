@@ -3,11 +3,12 @@
 #define GAME_H
 
 #include "Board.h"
-#include "Player.h"
 #include <string.h>
+#include "StockfishWrapper.h"
 
 class Game {
 public:
+    StockfishWrapper stockfish;
     Board board;
     int startGrid = -1;
     int destGrid = -1;
@@ -27,6 +28,7 @@ public:
     void printBoard();
     void processInput(std::string input);
     void processInput(int input);
+    std::string boardToFEN(); // Convert the current board state to FEN
 };
 
 #endif // GAME_H

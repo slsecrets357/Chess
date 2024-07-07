@@ -3,6 +3,7 @@
 
 #include "Piece.h"
 #include <memory>
+#include <string>
 
 // Forward declaration of Board to avoid circular dependency
 class Board;
@@ -19,10 +20,10 @@ private:
 
 public:
     // Constructors
-    Move(Position from, Position to, std::shared_ptr<Piece> movedPiece, std::shared_ptr<Piece> capturedPiece = nullptr, 
+    Move(Position from, Position to, std::shared_ptr<Piece> movedPiece, std::shared_ptr<Piece> capturedPiece = nullptr,
          bool isCastling = false, bool isPromotion = false, std::shared_ptr<Piece> promotionPiece = nullptr)
         : from(from), to(to), movedPiece(movedPiece), capturedPiece(capturedPiece),
-          isCastling(isCastling), isPromotion(isPromotion), promotionPiece(promotionPiece) {}
+        isCastling(isCastling), isPromotion(isPromotion), promotionPiece(promotionPiece) {}
 
     // Accessors
     Position getFrom() const { return from; }
